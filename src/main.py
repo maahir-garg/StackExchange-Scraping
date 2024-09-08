@@ -36,8 +36,8 @@ def xml_to_df(xml_file):
 # Define constants
 PLATFORM_NAME = "anime.meta.stackexchange"
 URL = f'https://archive.org/download/stackexchange_20240630/stackexchange_20240630/{PLATFORM_NAME}.com.7z'
-LOCAL_FILENAME = f'./ZippedFiles/{PLATFORM_NAME}.7z'
-EXTRACT_DIRECTORY = f'./UnzippedFiles/{PLATFORM_NAME}'
+LOCAL_FILENAME = f'../ZippedFiles/{PLATFORM_NAME}.7z'
+EXTRACT_DIRECTORY = f'../UnzippedFiles/{PLATFORM_NAME}'
 
 # Download and extract the .7z file
 download_file(URL, LOCAL_FILENAME)
@@ -109,4 +109,4 @@ desired_order = [
 
 final_df = final_df[desired_order]
 
-final_df.to_csv(f'{PLATFORM_NAME}.csv', index=False)
+final_df.to_csv(f'../Output/{PLATFORM_NAME}.csv', index=False)
