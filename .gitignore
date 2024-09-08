@@ -1,0 +1,4 @@
+*.csv
+/venv
+ZippedFiles
+UnzippedFiles
