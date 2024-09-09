@@ -120,8 +120,6 @@ def main():
     for i in range(145):
 
         platform_name = url_csv.iloc[i, 1]
-        if i == 3 or i == 7:
-            continue    # academia.stackexchange, android.stackexchange is causing errors
         print(f"{i}: {platform_name}")
         download_and_unzip(platform_name)
         print("---"*20)
