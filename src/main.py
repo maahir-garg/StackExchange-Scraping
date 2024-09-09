@@ -53,7 +53,7 @@ def count_votes(group):
     })
 
 
-def platform_name_to_csv(PLATFORM_NAME):
+def download_and_unzip(PLATFORM_NAME):
     URL = f'https://archive.org/download/stackexchange_20240630/stackexchange_20240630/{PLATFORM_NAME}.com.7z'
     LOCAL_FILENAME = f'../ZippedFiles/{PLATFORM_NAME}.7z'
     EXTRACT_DIRECTORY = f'../UnzippedFiles/{PLATFORM_NAME}'
@@ -67,6 +67,8 @@ def platform_name_to_csv(PLATFORM_NAME):
     # Extract the downloaded .7z file
     extract_7z_file(LOCAL_FILENAME, EXTRACT_DIRECTORY)
 
+def df_to_csv(PLATFORM_NAME):
+    EXTRACT_DIRECTORY = f'../UnzippedFiles/{PLATFORM_NAME}'
     # Load XML files into DataFrames
     dfs = {key: xml_to_df(os.path.join(EXTRACT_DIRECTORY, value)) for key, value in FILES.items()}
 
@@ -121,7 +123,7 @@ def main():
         if i == 3 or i == 7:
             continue    # academia.stackexchange, android.stackexchange is causing errors
         print(f"{i}: {platform_name}")
-        platform_name_to_csv(platform_name)
+        download_and_unzip(platform_name)
         print("---"*20)
     return
 
