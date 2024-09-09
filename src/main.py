@@ -36,19 +36,16 @@ def extract_7z_file(archive_path, extract_to='.'):
 
 # Function to parse XML and convert it into a DataFrame
 def xml_to_df(xml_file):
-    # Parse the XML file
     tree = ET.parse(xml_file)
     root = tree.getroot()
 
-    # Extract the data from the XML
     data = []
-    for element in root:
-        row = {child.tag: child.text for child in element}
-        data.append(row)
 
-    # Create the DataFrame
+    for row in root.findall('row'):  # Assuming the rows are <row> elements
+        data.append(row.attrib)  # Extract attributes of each row
+
+    # Convert to DataFrame
     df = pd.DataFrame(data)
-
     return df
 
 
