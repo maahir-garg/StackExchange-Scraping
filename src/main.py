@@ -127,7 +127,7 @@ def main():
     url_csv = pd.read_csv("stackexchange_download_links.csv")
 
     # platform_name_to_csv("android.meta.stackexchange")
-    for i in range(2):
+    for i in range(len(url_csv["Platform Name"])):
         platform_name = url_csv.iloc[i, 1]
         print(f"{i}: {platform_name}")
         df_to_csv(platform_name)
