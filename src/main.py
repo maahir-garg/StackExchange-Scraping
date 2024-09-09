@@ -36,12 +36,24 @@ def extract_7z_file(archive_path, extract_to='.'):
 
 # Function to parse XML and convert it into a DataFrame
 def xml_to_df(xml_file):
-    """Parse XML file and convert it into a DataFrame."""
-    print(f"Extracting {xml_file}")
+    # Parse the XML file
     tree = ET.parse(xml_file)
     root = tree.getroot()
-    records = [elem.attrib for elem in root]
-    return pd.DataFrame(records)
+
+    # Initialize list to hold data rows
+    data = []
+
+    # Loop through each element (record) in the XML
+    for child in root:
+        record = {}
+        for subchild in child:
+            record[subchild.tag] = subchild.text
+        data.append(record)
+
+    # Convert list of records to DataFrame
+    df = pd.DataFrame(data)
+
+    return df
 
 
 def count_votes(group):
@@ -118,10 +130,9 @@ def main():
 
     # platform_name_to_csv("android.meta.stackexchange")
     for i in range(145):
-
         platform_name = url_csv.iloc[i, 1]
         print(f"{i}: {platform_name}")
-        download_and_unzip(platform_name)
+        df_to_csv(platform_name)
         print("---"*20)
     return
 
