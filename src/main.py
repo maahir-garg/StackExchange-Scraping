@@ -36,22 +36,20 @@ def extract_7z_file(archive_path, extract_to='.'):
 
 # Function to parse XML and convert it into a DataFrame
 def xml_to_df(xml_file):
-    # Parse the XML file
+    """Convert XML file to a DataFrame, extracting attributes from each <row> element."""
     tree = ET.parse(xml_file)
     root = tree.getroot()
 
     # Initialize list to hold data rows
     data = []
 
-    # Loop through each element (record) in the XML
-    for child in root:
-        record = {}
-        for subchild in child:
-            record[subchild.tag] = subchild.text
-        data.append(record)
+    # Loop through each <row> element
+    for row in root.findall('row'):
+        data.append(row.attrib)  # Extract attributes as a dictionary
 
-    # Convert list of records to DataFrame
+    # Convert list of dictionaries to DataFrame
     df = pd.DataFrame(data)
+
     return df
 
 
@@ -77,6 +75,7 @@ def download_and_unzip(PLATFORM_NAME):
 
     # Extract the downloaded .7z file
     extract_7z_file(LOCAL_FILENAME, EXTRACT_DIRECTORY)
+
 
 def df_to_csv(PLATFORM_NAME):
     EXTRACT_DIRECTORY = f'../UnzippedFiles/{PLATFORM_NAME}'
@@ -128,7 +127,7 @@ def main():
     url_csv = pd.read_csv("stackexchange_download_links.csv")
 
     # platform_name_to_csv("android.meta.stackexchange")
-    for i in range(145):
+    for i in range(2):
         platform_name = url_csv.iloc[i, 1]
         print(f"{i}: {platform_name}")
         df_to_csv(platform_name)
