@@ -113,9 +113,13 @@ def platform_name_to_csv(PLATFORM_NAME):
 
 def main():
     url_csv = pd.read_csv("stackexchange_download_links.csv")
-    count = 0
+
+    # platform_name_to_csv("android.meta.stackexchange")
     for i in range(145):
+
         platform_name = url_csv.iloc[i, 1]
+        if i == 3:
+            continue # academia.stackexchange is causing errors
         print(platform_name)
         platform_name_to_csv(platform_name)
         print("---"*20)
