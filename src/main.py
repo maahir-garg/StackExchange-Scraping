@@ -52,7 +52,6 @@ def xml_to_df(xml_file):
 
     # Convert list of records to DataFrame
     df = pd.DataFrame(data)
-
     return df
 
 
