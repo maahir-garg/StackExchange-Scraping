@@ -114,12 +114,12 @@ def platform_name_to_csv(PLATFORM_NAME):
 def main():
     url_csv = pd.read_csv("stackexchange_download_links.csv")
     count = 0
-    for platform_name in url_csv["Platform Name"]:
+    for i in range(145):
+        platform_name = url_csv.iloc[i, 1]
         print(platform_name)
         platform_name_to_csv(platform_name)
-        count += 1
-        if count == 145:
-            return
+        print("---"*20)
+    return
 
 
 main()
