@@ -4,6 +4,7 @@ import requests
 import pandas as pd
 import xml.etree.ElementTree as ET
 import re
+from lxml import etree
 
 # Define file paths (update these paths accordingly)
 FILES = {
@@ -36,22 +37,22 @@ def extract_7z_file(archive_path, extract_to='.'):
 
 
 def clean_xml(xml_file):
-    with open(xml_file, 'r', encoding='utf-8', errors='replace') as file:
+    with open(xml_file, 'rb') as file:  # Open in binary mode
         content = file.read()
 
-    # Use regular expressions to clean any characters outside the valid range for XML
-    # Updated to use Unicode escapes for higher code points
-    cleaned_content = re.sub(r'[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD\u10000-\u10FFFF]', '', content)
+    # Remove non-printable or invalid characters
+    cleaned_content = re.sub(rb'[^\x09\x0A\x0D\x20-\x7E]', b'', content)
 
-    # Save the cleaned content
-    with open(xml_file, 'w', encoding='utf-8') as file:
+    # Write the cleaned content back to the file in binary mode
+    with open(xml_file, 'wb') as file:
         file.write(cleaned_content)
 
 
 # Function to parse XML and convert it into a DataFrame
 def xml_to_df(xml_file):
     clean_xml(xml_file)
-    tree = ET.parse(xml_file)
+    parser = etree.XMLParser(recover=True)  # Recover from invalid characters
+    tree = etree.parse(xml_file, parser)
     root = tree.getroot()
 
     data = []
