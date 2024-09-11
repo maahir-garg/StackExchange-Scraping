@@ -3,10 +3,8 @@ import py7zr
 import requests
 import pandas as pd
 import xml.etree.ElementTree as ET
-import re
-from lxml import etree
 
-# Define file paths (update these paths accordingly)
+# Define file paths
 FILES = {
     'posts': 'Posts.xml',
     'users': 'Users.xml',
@@ -36,33 +34,6 @@ def extract_7z_file(archive_path, extract_to='.'):
     print(f"Extracted contents to: {extract_to}")
 
 
-def clean_xml(xml_file):
-    with open(xml_file, 'rb') as file:  # Open in binary mode
-        content = file.read()
-
-    # Remove non-printable or invalid characters
-    cleaned_content = re.sub(rb'[^\x09\x0A\x0D\x20-\x7E]', b'', content)
-
-    # Write the cleaned content back to the file in binary mode
-    with open(xml_file, 'wb') as file:
-        file.write(cleaned_content)
-
-
-# Function to parse XML and convert it into a DataFrame
-# def xml_to_df(xml_file):
-#     clean_xml(xml_file)
-#     parser = etree.XMLParser(recover=True)  # Recover from invalid characters
-#     tree = etree.parse(xml_file, parser)
-#     root = tree.getroot()
-#
-#     data = []
-#
-#     for row in root.findall('row'):  # Assuming the rows are <row> elements
-#         data.append(row.attrib)  # Extract attributes of each row
-#
-#     # Convert to DataFrame
-#     df = pd.DataFrame(data)
-#     return df
 def xml_to_df(xml_file):
     records = []
     try:
@@ -98,29 +69,27 @@ def count_votes(group):
 
 
 def download_and_unzip(PLATFORM_NAME):
-    URL = f'https://archive.org/download/stackexchange_20240630/stackexchange_20240630/{PLATFORM_NAME}.com.7z'
-    LOCAL_FILENAME = f'../ZippedFiles/{PLATFORM_NAME}.7z'
-    EXTRACT_DIRECTORY = f'../UnzippedFiles/{PLATFORM_NAME}'
+    url = f'https://archive.org/download/stackexchange_20240630/stackexchange_20240630/{PLATFORM_NAME}.com.7z'
+    local_filename = f'../ZippedFiles/{PLATFORM_NAME}.7z'
+    extract_directory = f'../UnzippedFiles/{PLATFORM_NAME}'
 
     # Download and extract the .7z file
-    download_file(URL, LOCAL_FILENAME)
+    download_file(url, local_filename)
 
     # Ensure the extraction directory exists
-    os.makedirs(EXTRACT_DIRECTORY, exist_ok=True)
+    os.makedirs(extract_directory, exist_ok=True)
 
     # Extract the downloaded .7z file
-    extract_7z_file(LOCAL_FILENAME, EXTRACT_DIRECTORY)
+    extract_7z_file(local_filename, extract_directory)
 
 
-def df_to_csv(PLATFORM_NAME):
-    EXTRACT_DIRECTORY = f'../UnzippedFiles/{PLATFORM_NAME}'
-    # Load XML files into DataFrames
-    # dfs = {key: xml_to_df(os.path.join(EXTRACT_DIRECTORY, value)) for key, value in FILES.items()}
+def xml_to_csv(platform_name):
+    extract_directory = f'../UnzippedFiles/{platform_name}'
 
     dfs = {
-        key: xml_to_df(os.path.join(EXTRACT_DIRECTORY, value))
+        key: xml_to_df(os.path.join(extract_directory, value))
         for key, value in FILES.items()
-        if os.path.exists(os.path.join(EXTRACT_DIRECTORY, value))
+        if os.path.exists(os.path.join(extract_directory, value))
     }
 
     posts_df = dfs['posts']
@@ -151,7 +120,7 @@ def df_to_csv(PLATFORM_NAME):
     final_df = final_df.merge(badges_agg, on='UserId', how='left')
 
     # Add platform source and fill missing values
-    final_df['SourceId'] = PLATFORM_NAME
+    final_df['SourceId'] = platform_name
 
     desired_order = [
         'PostId', 'PostTypeId', 'CreationDate', 'UserId', 'Tags', 'Comments',
@@ -161,7 +130,7 @@ def df_to_csv(PLATFORM_NAME):
 
     final_df = final_df[desired_order]
 
-    final_df.to_csv(f'../Output/{PLATFORM_NAME}.csv', index=False)
+    final_df.to_csv(f'../Output/{platform_name}.csv', index=False)
 
 
 def main():
@@ -170,8 +139,16 @@ def main():
     # platform_name_to_csv("android.meta.stackexchange")
     for i in range(len(url_csv["Platform Name"])):
         platform_name = url_csv.iloc[i, 1]
+        if platform_name[:1] == "h":
+            break
         print(f"{i}: {platform_name}")
-        df_to_csv(platform_name)
+
+        # to convert extracted files from xml to csv
+        xml_to_csv(platform_name)
+
+        # to download and extract the .7z files into xml files
+        # download_and_unzip(platform_name)
+
         print("---"*20)
     return None
 
