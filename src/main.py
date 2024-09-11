@@ -49,20 +49,43 @@ def clean_xml(xml_file):
 
 
 # Function to parse XML and convert it into a DataFrame
+# def xml_to_df(xml_file):
+#     clean_xml(xml_file)
+#     parser = etree.XMLParser(recover=True)  # Recover from invalid characters
+#     tree = etree.parse(xml_file, parser)
+#     root = tree.getroot()
+#
+#     data = []
+#
+#     for row in root.findall('row'):  # Assuming the rows are <row> elements
+#         data.append(row.attrib)  # Extract attributes of each row
+#
+#     # Convert to DataFrame
+#     df = pd.DataFrame(data)
+#     return df
 def xml_to_df(xml_file):
-    clean_xml(xml_file)
-    parser = etree.XMLParser(recover=True)  # Recover from invalid characters
-    tree = etree.parse(xml_file, parser)
-    root = tree.getroot()
+    records = []
+    try:
+        tree = ET.parse(xml_file)
+        print(f"Extracting {xml_file}")
+        root = tree.getroot()
+        records = [elem.attrib for elem in root]
+    except ET.ParseError as e:
+        print(
+            f"ParseError: {e} in file {xml_file}. Attempting to skip problematic lines."
+        )
+        # Attempt to skip the problematic line
+        with open(xml_file, "r") as file:
+            lines = file.readlines()
+        for i, line in enumerate(lines):
+            try:
+                # Try parsing the line as XML
+                ET.fromstring(line)
+                records.append(ET.fromstring(line).attrib)
+            except ET.ParseError:
+                print(f"Skipping line {i + 1} due to ParseError.")
 
-    data = []
-
-    for row in root.findall('row'):  # Assuming the rows are <row> elements
-        data.append(row.attrib)  # Extract attributes of each row
-
-    # Convert to DataFrame
-    df = pd.DataFrame(data)
-    return df
+    return pd.DataFrame(records)
 
 
 def count_votes(group):
@@ -92,7 +115,13 @@ def download_and_unzip(PLATFORM_NAME):
 def df_to_csv(PLATFORM_NAME):
     EXTRACT_DIRECTORY = f'../UnzippedFiles/{PLATFORM_NAME}'
     # Load XML files into DataFrames
-    dfs = {key: xml_to_df(os.path.join(EXTRACT_DIRECTORY, value)) for key, value in FILES.items()}
+    # dfs = {key: xml_to_df(os.path.join(EXTRACT_DIRECTORY, value)) for key, value in FILES.items()}
+
+    dfs = {
+        key: xml_to_df(os.path.join(EXTRACT_DIRECTORY, value))
+        for key, value in FILES.items()
+        if os.path.exists(os.path.join(EXTRACT_DIRECTORY, value))
+    }
 
     posts_df = dfs['posts']
     users_df = dfs['users']
@@ -144,7 +173,7 @@ def main():
         print(f"{i}: {platform_name}")
         df_to_csv(platform_name)
         print("---"*20)
-    return
+    return None
 
 
 main()
