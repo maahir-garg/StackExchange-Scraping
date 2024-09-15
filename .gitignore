@@ -2,3 +2,5 @@
 /UnzippedFiles
 /ZippedFiles
 /Output
+/csv_files
+*.csv
