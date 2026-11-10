@@ -1,122 +1,57 @@
-# StackExchange XML to CSV Converter (main.py)
+# StackExchange scraping
 
-This project automates the process of downloading `.7z` archives from StackExchange, extracting XML files, and converting the extracted XML data into CSV files. The goal is to gather various data (posts, users, votes, etc.) from different platforms and format it into a single, structured CSV file for analysis.
+Python scripts that download the public StackExchange data dumps from the Internet Archive, extract the `.7z` archives, and convert the XML files into one CSV per site. They were built to prepare data for a study of Stack Overflow answer quality.
 
-## Features
+## Context and status
 
-- **Download**: Automatically download `.7z` files containing XML data from a specified URL.
-- **Extraction**: Extract the contents of the `.7z` files into a target directory.
-- **XML Parsing**: Convert XML data (posts, users, votes, comments, badges) into pandas DataFrames.
-- **Aggregation**: Aggregate votes, comments, and badges data.
-- **CSV Export**: Export the final aggregated DataFrame to a CSV file.
+The scripts were written in September 2024 as research-support tooling. They are kept for reference and are not maintained. They target the 2024-06-30 dump (`stackexchange_20240630` on archive.org).
 
-## Prerequisites
+## What is in the repo
 
-- Python 3.x
-- Required Python libraries:
-  - `os`
-  - `py7zr`
-  - `requests`
-  - `pandas`
-  - `xml.etree.ElementTree`
+- `src/extract_links.py`: fetches the archive.org page for the dump, collects the download links for the `.7z` files, derives a platform name from each link, and writes `stackexchange_download_links.csv`.
+- `src/stackexchange_download_links.csv`: the output of that script, with the columns `Download Links` and `Platform Name` and 361 rows. It is committed so that `main.py` can run without calling `extract_links.py` first.
+- `src/main.py`: downloads and extracts the archives, and converts the extracted XML to CSV.
+- `requirements.txt`: the third-party libraries the scripts import.
+- `.idea/`: PyCharm project settings.
 
-To install the required libraries, run:
-```bash
-pip install py7zr requests pandas 
+## Requirements and setup
+
+Python 3 and the packages in `requirements.txt` (`beautifulsoup4`, `pandas`, `py7zr`, `requests`).
+
+```
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-## Project Structure
-
-**Posts.xml**: Contains data related to posts.
-**Users.xml**: Contains data related to users.
-**Votes.xml**: Contains data related to voting activities on posts.
-**Comments.xml**: Contains data related to comments.
-**Badges.xml**: Contains data related to badges users have received.
+No environment variables or credentials are used.
 
 ## Usage
 
-1. Download and Unzip Files
-To download the .7z files from StackExchange and extract their contents:
+Run both scripts from inside `src/`, because `main.py` reads the links file from the current directory and uses paths relative to the parent directory.
 
-```python
-download_and_unzip(platform_name)
+Refresh the links file (optional, since a copy is committed):
+
 ```
-#### This function:
-1. Downloads the .7z archive file from a predefined URL.
-Extracts the contents into the target directory.
-2. Convert XML Files to CSV
-To convert the extracted XML files into a CSV:
-
-```python
-xml_to_csv(platform_name)
+python extract_links.py
 ```
 
-#### This function:
+Download, extract and convert with `main.py`:
 
-1. Reads the XML files (posts, users, votes, comments, badges).
-2. Aggregates the data by PostId and UserId.
-3. Merges the data from different files into a single DataFrame.
-4. Exports the final DataFrame to a CSV file.
-
-## Run the Full Pipeline
-To run the full pipeline of downloading, extracting, and converting to CSV:
-
-```bash
+```
 python main.py
 ```
 
-Loop through a list of platforms from stackexchange_download_links.csv. 
+The script runs `main()` as soon as it is executed. For each platform in the links file, in order, it does the following.
 
-For each platform:
-  - Download and extract XML files. 
-  - Convert the XML files to CSV and save the results in the Output directory.
+- Download: `download_and_unzip(platform_name)` fetches `https://archive.org/download/stackexchange_20240630/stackexchange_20240630/<platform>.com.7z` into `../ZippedFiles/` and extracts it into `../UnzippedFiles/<platform>/`. The call is commented out in `main()`, so uncomment it for a first run. The directories `../ZippedFiles` and `../Output` are not created by the script and must exist beforehand.
+- Convert: `xml_to_csv(platform_name)` reads `Posts.xml`, `Users.xml`, `Votes.xml`, `Comments.xml` and `Badges.xml` from the extracted folder, and writes `../Output/<platform>.csv`.
+- The output has one row per post, with the columns `PostId`, `PostTypeId`, `CreationDate`, `UserId`, `Tags`, `Comments`, `ParentId`, `Acceptance`, `Upvotes`, `Downvotes`, `UserDate`, `LastAccess`, `Reputation`, `Badges`, `ViewCount` and `SourceId`. `Comments` is the number of comments on the post, `Acceptance`, `Upvotes` and `Downvotes` are the counts of vote types 1, 2 and 3 on the post, `Badges` is the number of badges held by the post owner, and `Reputation`, `UserDate` and `LastAccess` come from the owner's user record.
+- If an XML file fails to parse, the script retries it line by line and skips lines that do not parse.
 
-### Error Handling
+## Notes and limits
 
-**Parsing Errors**: If an XML parsing error occurs, the script attempts to skip the problematic line and continue processing the rest of the file.
-
-**File Existence**: The script checks if XML files exist before attempting to process them.
-
-# StackExchange Download Links Scraper (extract_links.py)
-
-This script extracts download links for `.7z` files from the StackExchange archive webpage, specifically from the [StackExchange 20240630 dataset](https://archive.org/details/stackexchange_20240630). \
-The links point to compressed data from different platforms in `.7z` format. \
-The script also extracts platform names from the links and saves the data in a CSV file.
-
-## Features
-
-- **Web Scraping**: Uses BeautifulSoup to extract all download links from the target webpage.
-- **Platform Name Extraction**: Automatically extracts the platform names from the URLs.
-- **CSV Export**: The extracted download links and platform names are saved in a CSV file.
-
-## Prerequisites
-
-- Python 3.x
-- Required Python libraries:
-  - `requests`
-  - `beautifulsoup4`
-  - `pandas`
-
-To install the required libraries, run:
-```bash
-pip install requests beautifulsoup4 pandas
-```
-
-## Usage
-Run the script:
-
-```bash
-python stackexchange_scraper.py
-```
-
-The script will:
-- Fetch the webpage content 
-- Extract download links 
-- Create a DataFrame with the links and platform names 
-- Save the data to 'stackexchange_download_links.csv'
-
-## Output
-The script generates a CSV file named 'stackexchange_download_links.csv' with two columns:
-
-**Download Links**: The full URLs for downloading StackExchange data dumps
-Platform Name: The name of the StackExchange platform extracted from the URL
+- As committed, the loop in `main()` stops at the first platform whose name starts with the letter "h". With the committed links file that is the 146th entry (`ham.meta.stackexchange`), so only the platforms listed before it are converted. The break condition has to be changed to process the rest, including `stackoverflow`.
+- `xml_to_csv` expects all five XML files to be present and raises an error if one is missing.
+- The data dumps are published by StackExchange through the Internet Archive and come with terms stated on that page, which you should check before reuse. The dumps are large, and the extracted XML and generated CSVs are not part of this repository (`.gitignore` lists `/ZippedFiles` and `/UnzippedFiles`).
+- Keep the request rate low. `extract_links.py` depends on the CSS classes used on the archive.org page at the time it was written.

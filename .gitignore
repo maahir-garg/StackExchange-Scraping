@@ -2,3 +2,10 @@
 /UnzippedFiles
 /ZippedFiles
 /Output
+.DS_Store
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Editor settings
+.idea/
